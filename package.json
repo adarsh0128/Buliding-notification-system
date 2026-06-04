@@ -1,0 +1,33 @@
+{
+  "name": "order-change-notification-system",
+  "version": "1.0.0",
+  "description": "Event-driven PostgreSQL LISTEN/NOTIFY and Socket.IO system for real-time order updates.",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "db:setup": "node scripts/setupDatabase.js"
+  },
+  "keywords": [
+    "postgresql",
+    "listen-notify",
+    "socket.io",
+    "express",
+    "realtime"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.13.1",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

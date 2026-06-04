@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Change Notifications</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="top-bar">
+        <div>
+          <p class="eyebrow">Realtime PostgreSQL Events</p>
+          <h1>Order Change Monitor</h1>
+        </div>
+        <div class="status-pill" id="connectionStatus" aria-live="polite">
+          <span class="status-dot disconnected"></span>
+          <span>Disconnected</span>
+        </div>
+      </header>
+
+      <section class="summary-grid" aria-label="Order summary">
+        <article>
+          <span>Total Orders</span>
+          <strong id="totalOrders">0</strong>
+        </article>
+        <article>
+          <span>Pending</span>
+          <strong id="pendingOrders">0</strong>
+        </article>
+        <article>
+          <span>Shipped</span>
+          <strong id="shippedOrders">0</strong>
+        </article>
+        <article>
+          <span>Delivered</span>
+          <strong id="deliveredOrders">0</strong>
+        </article>
+      </section>
+
+      <section class="workspace">
+        <section class="orders-panel" aria-labelledby="ordersHeading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Current Snapshot</p>
+              <h2 id="ordersHeading">Orders</h2>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Customer</th>
+                  <th>Product</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody">
+                <tr>
+                  <td colspan="5" class="empty-cell">Loading orders...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <aside class="updates-panel" aria-labelledby="updatesHeading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Live Stream</p>
+              <h2 id="updatesHeading">Updates</h2>
+            </div>
+            <button id="clearEventsButton" type="button">Clear</button>
+          </div>
+          <div id="updatesList" class="updates-list" aria-live="polite">
+            <div class="empty-state">Waiting for database changes...</div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
