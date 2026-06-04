@@ -4,7 +4,7 @@ Production-style local implementation of a real-time notification system where b
 
 This solution does not use polling. PostgreSQL triggers publish change events with `LISTEN/NOTIFY`, a Node.js backend receives those events, and Socket.IO broadcasts them to all connected browsers.
 
-## Project Overview
+# Project Overview
 
 The app demonstrates an event-driven path from database mutation to client UI update:
 
@@ -14,7 +14,7 @@ The app demonstrates an event-driven path from database mutation to client UI up
 - Socket.IO keeps persistent WebSocket connections with clients.
 - The frontend updates its order table and live event stream immediately.
 
-## Problem Statement
+# Problem Statement
 
 Build a local development system where clients receive real-time updates for all `INSERT`, `UPDATE`, and `DELETE` operations on the `orders` table without polling the database or repeatedly calling an API.
 
@@ -33,7 +33,7 @@ Each notification contains:
 }
 ```
 
-## Architecture Diagram
+# Architecture Diagram
 
 ```text
 Client Browser
@@ -51,7 +51,7 @@ PostgreSQL
 orders table
 ```
 
-## Data Flow Diagram
+# Data Flow Diagram
 
 ```text
 1. A row is inserted, updated, or deleted in orders.
@@ -64,7 +64,7 @@ orders table
 8. The browser updates the table and live update panel instantly.
 ```
 
-## Folder Structure
+# Folder Structure
 
 ```text
 project-root/
@@ -91,7 +91,7 @@ project-root/
   README.md
 ```
 
-## Design Decisions
+# Design Decisions
 
 ### PostgreSQL Trigger Function
 
@@ -360,5 +360,6 @@ The current design is intentionally simple and excellent for local development, 
 - Add Socket.IO Redis adapter for multi-instance deployments.
 - Add schema migration tooling such as Knex, Prisma Migrate, or node-pg-migrate.
 - Add structured JSON logging for production log aggregation.
-#   B u l i d i n g - n o t i f i c a t i o n - s y s t e m  
- 
+  #   B u l i d i n g - n o t i f i c a t i o n - s y s t e m 
+   
+   
