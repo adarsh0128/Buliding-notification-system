@@ -210,3 +210,156 @@ Open a second terminal and connect to the database:
 ```bash
 psql "postgres://postgres:postgres@localhost:5432/order_notifications"
 ```
+
+
+### INSERT Test
+
+```sql
+INSERT INTO orders (customer_name, product_name, status)
+VALUES ('John', 'Laptop', 'pending');
+```
+
+Expected client output:
+
+```text
+[12:05:14]
+INSERT
+Order #4
+John ordered Laptop. Status is pending.
+```
+
+### UPDATE Test
+
+```sql
+UPDATE orders
+SET status = 'shipped'
+WHERE customer_name = 'John'
+  AND product_name = 'Laptop';
+```
+
+Expected client output:
+
+```text
+[12:05:25]
+UPDATE
+Order #4
+John ordered Laptop. Status is shipped.
+```
+
+### DELETE Test
+
+```sql
+DELETE FROM orders
+WHERE customer_name = 'John'
+  AND product_name = 'Laptop';
+```
+
+Expected client output:
+
+```text
+[12:05:40]
+DELETE
+Order #4
+John's Laptop order was removed.
+```
+
+## Sample Server Logs
+
+```text
+[2026-06-04T10:30:00.000Z] [INFO] Connected to PostgreSQL
+[2026-06-04T10:30:00.010Z] [INFO] Connected notification listener to PostgreSQL
+[2026-06-04T10:30:00.012Z] [INFO] Listening on channel: order_changes
+[2026-06-04T10:30:00.020Z] [INFO] Server started on port 3000
+[2026-06-04T10:30:10.100Z] [INFO] Client connected: rG9YHn3YjYX8wUuXAAAB
+[2026-06-04T10:31:22.500Z] [INFO] Notification received: { event: 'UPDATE', data: { id: 1 } }
+```
+
+## Why This Is Not Polling
+
+Polling repeatedly asks the server or database whether something changed. That wastes CPU, network bandwidth, and database connections when there are no updates. It also creates latency because users only see changes on the next polling interval.
+
+This system is event-driven:
+
+- PostgreSQL emits a notification exactly when data changes.
+- The backend stays idle until a notification arrives.
+- Socket.IO pushes the update to clients immediately.
+
+The result is lower latency and more efficient resource usage.
+
+## Scalability Discussion
+
+### Benefits of Current Design
+
+- Low latency because updates are pushed as soon as the transaction commits.
+- No repeated API calls from clients.
+- No repeated database reads just to detect changes.
+- Simple operational model for local development and interview demonstration.
+- Correctly captures direct database changes, not only changes made through one backend route.
+
+### Limitations of PostgreSQL LISTEN/NOTIFY
+
+- Payload size is limited, so large event bodies should use IDs and fetch details separately.
+- Notifications are not durable. If the backend listener is down, events sent during downtime are missed.
+- It is not a replacement for a message broker when replay, retention, ordering guarantees, or high fan-out are required.
+- Every backend instance needs its own listener connection.
+
+### Scaling With Redis Pub/Sub
+
+For multiple Socket.IO server instances, Redis can act as a fan-out layer:
+
+```text
+PostgreSQL NOTIFY
+  -> One or more backend listeners
+  -> Redis Pub/Sub
+  -> Socket.IO instances
+  -> Connected clients
+```
+
+Socket.IO also supports a Redis adapter, which allows events emitted from one Node.js instance to reach clients connected to other instances.
+
+### Scaling With Kafka
+
+For very large systems, Kafka can be introduced when durability and replay matter:
+
+```text
+PostgreSQL change event
+  -> Backend or CDC producer
+  -> Kafka topic
+  -> Consumer group
+  -> WebSocket gateway
+  -> Clients
+```
+
+Kafka improves:
+
+- Durable event storage
+- Replay after outages
+- Back-pressure handling
+- Independent consumers for analytics, notifications, auditing, and search indexing
+
+The trade-off is higher operational complexity.
+
+### Horizontal Scaling Strategy
+
+To scale the current design:
+
+1. Put Node.js instances behind a load balancer.
+2. Use sticky sessions or the Socket.IO Redis adapter.
+3. Add Redis Pub/Sub so broadcasts reach clients connected to any instance.
+4. Keep PostgreSQL trigger payloads small.
+5. Move durable event processing to Kafka or another message broker if missed events are unacceptable.
+6. Add observability for listener health, socket counts, event lag, and database errors.
+
+### Trade-Offs
+
+The current design is intentionally simple and excellent for local development, interviews, and moderate real-time workloads. It favors low latency and minimal infrastructure over durable messaging. For mission-critical production systems, add a durable event log, replay support, authentication, authorization, and stronger observability.
+
+## Future Improvements
+
+- Add authentication and authorize which clients can see which orders.
+- Add integration tests that run against a disposable local PostgreSQL database.
+- Add event persistence for missed notification recovery.
+- Add Socket.IO Redis adapter for multi-instance deployments.
+- Add schema migration tooling such as Knex, Prisma Migrate, or node-pg-migrate.
+- Add structured JSON logging for production log aggregation.
+  #
